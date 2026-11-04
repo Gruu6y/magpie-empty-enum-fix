@@ -1,0 +1,88 @@
+name: selfcheck
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          check-latest: true
+
+      - name: gofmt
+        run: |
+          out="$(gofmt -l selfcheck)"
+          if [ -n "$out" ]; then
+            echo "unformatted files:"; echo "$out"; exit 1
+          fi
+          echo "gofmt: clean"
+
+      - name: go vet
+        working-directory: selfcheck
+        run: go vet ./...
+
+      - name: selfcheck tests
+        working-directory: selfcheck
+        run: go test ./... -count=1 -v
+
+      - name: Patch integrity
+        run: |
+          set -eu
+          for p in \
+            patches/empty-enum.patch \
+            patches/0001-gateway-reject-empty-enum-values-in-antigravity-schemas.patch
+          do
+            test -f "$p"
+            if [ "$(tr -cd '\r' < "$p" | wc -c)" -ne 0 ]; then
+              echo "$p contains CR; patches must be LF-only"; exit 1
+            fi
+            n="$(grep -c 'ok && s != ""' "$p" || true)"
+            if [ "$n" -lt 2 ]; then
+              echo "$p is missing a guard (found $n)"; exit 1
+            fi
+            echo "$p: ok ($n guards, LF)"
+          done
+
+      - name: Regression test file is shipped
+        run: |
+          grep -q 'func TestPlainSchemaDropsEnumWithEmptyValue' \
+            tests/plain_schema_empty_enum_test.go
+
+  apply-check:
+    # Verify the mbox applies cleanly to the baseline magpie tree. This is a
+    # read-only check: it clones upstream, applies --check, and never runs or
+    # configures magpie.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Clone magpie at the patch baseline
+        run: |
+          git clone --filter=blob:none --no-checkout \
+            https://github.com/yetone/magpie.git /tmp/magpie-baseline
+          git -C /tmp/magpie-baseline fetch --depth 1 origin \
+            a3768cdd1113118998863ed36bd6dd77c8e9e2cc
+          git -C /tmp/magpie-baseline checkout --detach \
+            a3768cdd1113118998863ed36bd6dd77c8e9e2cc
+
+      - name: git apply --check
+        run: |
+          git -C /tmp/magpie-baseline apply --check --verbose \
+            "$GITHUB_WORKSPACE/patches/0001-gateway-reject-empty-enum-values-in-antigravity-schemas.patch"
