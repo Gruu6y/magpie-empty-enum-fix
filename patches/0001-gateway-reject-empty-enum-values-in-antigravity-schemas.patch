@@ -1,0 +1,129 @@
+From 6d0993596dbe6666ddca1831ba5ed21c69f75e22 Mon Sep 17 00:00:00 2001
+From: Gruu6y <129347307+Gruu6y@users.noreply.github.com>
+Date: Wed, 4 Nov 2026 20:23:58 +0800
+Subject: [PATCH] gateway: reject empty enum values in Antigravity tool schemas
+
+Google's GenerateContentRequest validation rejects a function declaration
+whose enum contains an empty string:
+
+  * GenerateContentRequest.tools[0].function_declarations[N]
+      .parameters.properties[modelOverride].properties[effort]
+      .enum[0]: cannot be empty
+
+plainSchema() kept every string enum member because it only rejected
+non-string ones. An empty choice ("follow the default") is a valid JSON
+Schema enum value, so it reached Antigravity unchanged. The same function
+also turns a string `const` into a one-element enum, so `const: ""` produced
+the identical invalid payload even after the enum branch was fixed.
+
+Drop the whole enum keyword when any member is an empty string, following
+plainSchema's existing rule for enums containing a non-string value. Do not
+filter just the empty member out of the list: the model could still answer
+with "" and be rejected a second time. Apply the same guard to the const
+branch, which is the sibling of the same bug.
+
+Why it matters: magpie classifies this 400 as shapeRefused and retries with
+another group member, so the turn still returns 200 but the first token is
+much later and the Antigravity seat is wasted. On one 2026-11-04 routing
+ledger, 29/29 records carrying the offending tool got at least one
+Antigravity 400 while 0/15 successful Antigravity records carried it; a
+different agent without that tool succeeded 74/75 times.
+
+Add an in-memory regression test that fails on the unpatched tree.
+
+Verification (Go 1.27.0, windows/amd64, isolated sparse clone at a3768cd):
+gofmt clean; `go test ./internal/gateway/ -run TestPlainSchema -count=1`
+PASS (3 existing + 1 new); `go vet ./internal/gateway/` PASS;
+`go build ./internal/gateway/` PASS; `git apply --check` / `git apply` /
+`patch --dry-run -p1` PASS on a clean copy of HEAD. The full
+internal/gateway suite has 9 pre-existing red tests on that machine; the
+identical 9 fail with the fix reverted, so they are unrelated to this change.
+Full-repository and cross-platform checks were not run. No live gateway was
+contacted and no production config was touched.
+
+Per docs/contributors.md this repository does not take external PRs; this
+patch is offered as a description plus a diff for a maintainer to apply.
+If the root cause, error text or test fixture is used, please credit the
+reporter in the commit.
+---
+ internal/gateway/codeassist.go                |  9 +++--
+ .../gateway/plain_schema_empty_enum_test.go   | 37 +++++++++++++++++++
+ 2 files changed, 43 insertions(+), 3 deletions(-)
+ create mode 100644 internal/gateway/plain_schema_empty_enum_test.go
+
+diff --git a/internal/gateway/codeassist.go b/internal/gateway/codeassist.go
+index 445c956..31f54d4 100644
+--- a/internal/gateway/codeassist.go
++++ b/internal/gateway/codeassist.go
+@@ -1090,11 +1090,14 @@ func plainSchema(raw json.RawMessage) json.RawMessage {
+ 						out["maxItems"] = 0
+ 					}
+ 				case "enum":
+-					// Google takes string enums only
++					// Google takes string enums only and refuses an empty one
++					// outright: an empty choice is left out as a whole rather
++					// than dropped from the list, since a model could still
++					// answer with it.
+ 					if es, ok := v.([]any); ok {
+ 						strs := make([]any, 0, len(es))
+ 						for _, e := range es {
+-							if s, ok := e.(string); ok {
++							if s, ok := e.(string); ok && s != "" {
+ 								strs = append(strs, s)
+ 							}
+ 						}
+@@ -1109,7 +1112,7 @@ func plainSchema(raw json.RawMessage) json.RawMessage {
+ 				}
+ 			}
+ 			if c, ok := x["const"]; ok {
+-				if s, ok := c.(string); ok {
++				if s, ok := c.(string); ok && s != "" {
+ 					out["enum"] = []any{s}
+ 				}
+ 			}
+diff --git a/internal/gateway/plain_schema_empty_enum_test.go b/internal/gateway/plain_schema_empty_enum_test.go
+new file mode 100644
+index 0000000..517a5d5
+--- /dev/null
++++ b/internal/gateway/plain_schema_empty_enum_test.go
+@@ -0,0 +1,37 @@
++package gateway
++
++import (
++	"encoding/json"
++	"reflect"
++	"testing"
++)
++
++// Google refuses an empty enum value in a function declaration. plainSchema
++// drops the whole enum keyword, including one written by const, so an empty
++// choice cannot be sent or written back by the model. A valid enum and the
++// existing rule against non-string values stay as they were.
++func TestPlainSchemaDropsEnumWithEmptyValue(t *testing.T) {
++	in := `{"type":"object","properties":{
++		"emptyEnum":{"type":"string","enum":["","minimal","low","medium","high"]},
++		"emptyConst":{"type":"string","const":""},
++		"keptEnum":{"type":"string","enum":["a","b"]},
++		"mixedEnum":{"type":"string","enum":["a",1]}
++	}}`
++	want := `{"type":"object","properties":{
++		"emptyEnum":{"type":"string"},
++		"emptyConst":{"type":"string"},
++		"keptEnum":{"type":"string","enum":["a","b"]},
++		"mixedEnum":{"type":"string"}
++	}}`
++	var got, exp any
++	if err := json.Unmarshal(plainSchema(json.RawMessage(in)), &got); err != nil {
++		t.Fatal(err)
++	}
++	if err := json.Unmarshal([]byte(want), &exp); err != nil {
++		t.Fatal(err)
++	}
++	if !reflect.DeepEqual(got, exp) {
++		b, _ := json.Marshal(got)
++		t.Errorf("got %s", b)
++	}
++}
+-- 
+2.56.0.windows.3
+
