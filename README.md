@@ -203,8 +203,11 @@ is a ready-to-paste description for the Discord / an issue. Per magpie's
 `docs/contributors.md`, if a maintainer uses the root cause, error text or
 test fixture, the commit should credit the reporter.
 
-This repository has no remote configured until the publication channel is
-chosen by its owner.
+Published at
+[github.com/Gruu6y/magpie-empty-enum-fix](https://github.com/Gruu6y/magpie-empty-enum-fix)
+(public, MIT). `main` is `38ec986`; GitHub Actions runs the `selfcheck` job on
+every push. No upstream pull request is opened from here — see
+`docs/UPSTREAM-REPORT.md` for the report a maintainer can pick up.
 
 ---
 

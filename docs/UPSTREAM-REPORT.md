@@ -111,8 +111,10 @@ workflow and this report live in `magpie-empty-enum-fix`:
 | `docs/VERIFICATION.md` | full command output, the 9-test baseline comparison, and the list of checks not run |
 | `LICENSE`, `NOTICE` | MIT for the repository's own material; magpie attribution |
 
-The repository is not a fork and ships no magpie source, only the diff. It has
-no remote configured yet; the publication channel is the owner's call.
+The repository is not a fork and ships no magpie source, only the diff. A
+public copy with the patch, the regression test, the standalone selfcheck and
+its CI is at https://github.com/Gruu6y/magpie-empty-enum-fix, so anything here
+can be fetched and reproduced directly.
 
 Per `docs/contributors.md` this repository does not take external PRs, so this is
 a description plus a patch rather than a pull request. If you use the root cause,

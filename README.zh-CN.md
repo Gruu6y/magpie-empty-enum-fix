@@ -88,5 +88,6 @@ Only maintainers can open them.」因此这里**没有 PR**，只提供描述 + 
 `docs/contributors.md`，维护者若采用根因、错误文本或测试夹具，请在 commit 里 credit
 报告者。
 
-本仓库尚未配置 remote，公开渠道由所有者决定。自有材料 MIT（LICENSE），补丁改的是
-magpie 自己的 MIT 代码、此处只分发 diff，详见 `NOTICE`。
+已公开发布在 https://github.com/Gruu6y/magpie-empty-enum-fix （public / MIT），
+`main` = `38ec986`，GitHub Actions 的 `selfcheck` 每次 push 自动跑。自有材料
+MIT（LICENSE），补丁改的是 magpie 自己的 MIT 代码、此处只分发 diff，详见 `NOTICE`。

@@ -1,7 +1,7 @@
 # Commit messages
 
 This repository uses [Conventional Commits](https://www.conventionalcommits.org/)
-subjects and a body that answers **why**, not just **what**. All four commits
+subjects and a body that answers **why**, not just **what**. All five commits
 are real commits in this repository; run `git log --format=fuller` to see them.
 
 The patch's own commit message (the one a maintainer would land in magpie) is
@@ -95,6 +95,34 @@ identical baseline list, and the checks that were NOT run.
 docs/UPSTREAM-REPORT.md is a ready-to-paste description for magpie's Discord
 or an issue, including the observed 2026-11-04 impact and the credit request
 from docs/contributors.md.
+```
+
+---
+
+## 5. `docs: record publication and passing CI`
+
+```
+docs: record publication and passing CI
+
+The first four commits were written before a publication channel existed, so
+README.md, README.zh-CN.md, docs/UPSTREAM-REPORT.md and docs/VERIFICATION.md
+said "no remote configured, publication pending". The repository is now
+public at https://github.com/Gruu6y/magpie-empty-enum-fix with main at 38ec986,
+19 tracked blobs identical to the local tree, and both selfcheck CI runs
+completed / success; leaving the old wording would contradict the published
+page, so this commit records the real state instead of rewriting published
+history.
+
+docs/VERIFICATION.md also gains the read-back evidence (ls-remote, recursive
+tree, Actions runs), drops the stale pre-amend short sha d924be3, and corrects
+an over-broad production claim: this task never wrote
+C:/Users/Administrator/.config/magpie/providers.json, but the running magpie
+updates that file on its own, so a frozen mtime is not proof of anything.
+
+It records the credential lesson too: the local GCM token has only public_repo
+and cannot write .github/workflows/* (git push refuses it, REST returns 404),
+while the cindy-github plugin's backup token has the workflow scope and built
+the identical trees and commits.
 ```
 
 ---

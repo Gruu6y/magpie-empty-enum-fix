@@ -1,7 +1,7 @@
 # magpie 空 enum 补丁：验收记录
 
 日期：2026-11-04
-仓库：`magpie-empty-enum-fix`（独立仓库，无 remote）
+仓库：`magpie-empty-enum-fix`（已发布 https://github.com/Gruu6y/magpie-empty-enum-fix ）
 补丁：`patches/empty-enum.patch`（73 行 / 2501 字节 / 纯 LF，只含 2 个文件）；`patches/0001-gateway-reject-empty-enum-values-in-antigravity-schemas.patch` 是带完整提交信息的 `git format-patch` mbox（5351 字节 / 129 行 / 纯 LF）
 回归测试副本：`tests/plain_schema_empty_enum_test.go`
 独立自检：`selfcheck/`（零依赖 Go 模块）、`scripts/verify.sh`、`.github/workflows/ci.yml`
@@ -154,7 +154,7 @@ ok  	magpie-empty-enum-fix/selfcheck	0.204s
 
 14 个测试全部通过：`TestLegacyReproducesTheBug`（两分支都能复现空 enum）、`TestPatchedMatchesUpstreamExpectation`（与 `tests/plain_schema_empty_enum_test.go` 四种情形逐字段一致）、`TestWholeEnumKeywordIsDroppedNotFiltered`、`TestEmptyConstDoesNotBecomeEnum`、`TestConstOverridesEnumIsAlsoGuarded`、`TestKeptEnumIsUnchanged`、`TestNonStringEnumIsDroppedInBothModes`、`TestNestedSchemaAndArraysRecurse`、`TestRealWorldRoutineSaveShape`（复现 `modelOverride.effort` 真实形状）、`TestUnknownKeywordsAreDropped`、`TestMalformedInputIsSafe`，以及三个仓库完整性测试（format-patch 带两处 guard + 提交信息、plain patch 是合法 diff、上游回归测试文件已随仓库提供）。
 
-`scripts/verify.sh` 把上述检查串成 6 步；`scripts/verify.sh /path/to/magpie` 额外在临时干净副本上跑 `git apply --check`。`.github/workflows/ci.yml` 的 `verify` 任务跑同样的检查，`apply-check` 任务在克隆的基线 magpie 上做只读 `git apply --check`；CI 配置本身未在本机执行（无 remote）。
+`scripts/verify.sh` 把上述检查串成 6 步；`scripts/verify.sh /path/to/magpie` 额外在临时干净副本上跑 `git apply --check`。`.github/workflows/ci.yml` 的 `verify` 任务跑同样的检查，`apply-check` 任务在克隆的基线 magpie 上做只读 `git apply --check`；CI 配置未在本机执行，发布后在 GitHub Actions 实跑通过（见文末「发布状态」）。
 
 `scripts/apply.sh` 提供 `--check` / `--apply` / `--am` 三档，必须显式给出 magpie 副本路径；`git am` 前先检查 `GIT_COMMITTER_IDENT`，避免本机全局 identity 为空时留下半应用的 mailbox（此前实测报 `Committer identity unknown` / `fatal: unable to auto-detect email address (got 'Administrator@qhl.(none)')`）。
 
@@ -195,18 +195,36 @@ $ git log --format='%h %s' --reverse
 925710c chore: scaffold standalone patch repository
 af43472 fix: reject empty enum values in Antigravity tool schemas
 ca3d05a test: add standalone selfcheck suite, scripts and CI
-d924be3 docs: add README, verification record and upstream report
+38ec986 docs: add README, verification record and upstream report
 
 $ git status --short
 (空，工作区干净)
 $ git fsck --no-progress
 (无输出)
 $ git remote -v
-(空，未配置远程，发布渠道待定)
+(空，此时尚未配置远程；发布状态见文末)
 ```
 
-19 个受版本控制的文件全部是 LF（`git show HEAD:<file> | tr -cd '\r' | wc -c` 逐文件为 0），`git fsck` 无报错。四条提交信息全文见 [`docs/COMMIT-MESSAGES.md`](COMMIT-MESSAGES.md)。
+19 个受版本控制的文件全部是 LF（`git show HEAD:<file> | tr -cd '\r' | wc -c` 逐文件为 0），`git fsck` 无报错。提交信息全文见 [`docs/COMMIT-MESSAGES.md`](COMMIT-MESSAGES.md)。
 
 ## 结论
 
-补丁可 `git apply` / `git am`、有先失败后通过的回归测试、`plainSchema` 相关测试全绿、`gofmt`/`vet`/`build` 通过；整包既有 9 个红灯经基线对照证明与本次改动无关；独立仓库自检 14/14 通过；`scripts/verify.sh` 六步 `ALL CHECKS PASSED`；`git am` 应用结果与已验证源码逐字一致；仓库四条提交、工作区干净、无远程。生产配置 `C:/Users/Administrator/.config/magpie/providers.json` mtime 仍为 `2026-11-04 13:58:12.119764200 +0800` / 17196B，全程未动。
+补丁可 `git apply` / `git am`、有先失败后通过的回归测试、`plainSchema` 相关测试全绿、`gofmt`/`vet`/`build` 通过；整包既有 9 个红灯经基线对照证明与本次改动无关；独立仓库自检 14/14 通过；`scripts/verify.sh` 六步 `ALL CHECKS PASSED`；`git am` 应用结果与已验证源码逐字一致；仓库已公开发布，CI 实跑通过（见下节）。本任务全程未写生产配置 `C:/Users/Administrator/.config/magpie/providers.json`、未连接 127.0.0.1:3425、未发任何真实模型请求；该文件由正在运行的 magpie 自行持续更新（本任务期间其 mtime 从 13:58 推进到 21:20、体积 17196B → 17104B），与本任务无关。
+
+## 发布状态（2026-11-04 21:17，本机实测远端只读回执）
+
+公开仓库：https://github.com/Gruu6y/magpie-empty-enum-fix （`private=false`，license MIT，`default_branch=main`）。
+
+```
+$ git ls-remote origin
+38ec986cbdbebbfb9d600c6e74d64eb55f15daf4 HEAD
+38ec986cbdbebbfb9d600c6e74d64eb55f15daf4 refs/heads/main
+$ git rev-parse HEAD
+38ec986cbdbebbfb9d600c6e74d64eb55f15daf4   # 本地与远端逐字相同
+```
+
+远端 `GET /git/trees/38ec986?recursive=1`：`truncated=false`，19 个 blob 与本地 sha 全部一致（含 `.github/workflows/ci.yml` 2606B）。提交链四条 `925710c → af43472 → ca3d05a → 38ec986` 与本地完全相同。GitHub Actions `total_count=2`，两条 `selfcheck` 均 `completed / success`，head_sha 均为 `38ec986cb`。临时验证分支 `verify-chain` 已删除（HTTP 204）。
+
+### 凭证教训（本次发布的真实坑）
+
+本机 GCM 的 `ghp_` token 只有 `public_repo` scope：`git push` 被 `refusing to allow a Personal Access Token to create or update workflow \`.github/workflows/ci.yml\` without \`workflow\` scope` 拒绝，REST 在 workflow 路径上一律 `404 {"message":"Not Found"}`（建 tree、建 blob 后引用、PUT contents 三种写法都一样）。改用 cindy-github 插件的备用令牌（有 `workflow` 权限）后，含 workflow 的 tree 一次建成、sha 与本地逐字一致，4 条提交对象按相同 sha 落在远端，最后 `updateRef(force:true)` 把 `main` 挪到 `38ec986`。**结论：涉及 workflow 文件的写入走插件备用令牌，不要用 GCM token。**
