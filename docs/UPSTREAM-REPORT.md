@@ -1,5 +1,13 @@
 # Antigravity: `plainSchema` sends an empty `enum` value, Google rejects the whole request
 
+> **Status (2026-11-04): posted as a comment on
+> [yetone/magpie#5235](https://github.com/yetone/magpie/issues/5235#issuecomment-6632991245)**,
+> which independently documents the same root cause (dsh + Portainer MCP, macOS).
+> No duplicate issue was opened. The text below is the standalone version of the
+> report; the comment adds a live 12-request A/B against the real gateway
+> (400 ×6 with an empty enum member, 200 ×6 without), now also recorded in
+> `docs/VERIFICATION.md`.
+
 **What happened.** An agent whose tool schema contains a string `enum` whose first
 value is `""` (an empty choice meaning "follow the default") gets every Antigravity
 request rejected with:

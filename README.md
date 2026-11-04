@@ -206,8 +206,10 @@ test fixture, the commit should credit the reporter.
 Published at
 [github.com/Gruu6y/magpie-empty-enum-fix](https://github.com/Gruu6y/magpie-empty-enum-fix)
 (public, MIT). `main` is `38ec986`; GitHub Actions runs the `selfcheck` job on
-every push. No upstream pull request is opened from here — see
-`docs/UPSTREAM-REPORT.md` for the report a maintainer can pick up.
+every push. Reported upstream as a comment on
+[yetone/magpie#5235](https://github.com/yetone/magpie/issues/5235#issuecomment-6632991245),
+which already documented the same root cause (so no duplicate issue was opened).
+No upstream pull request is opened from here — see `docs/UPSTREAM-REPORT.md`.
 
 ---
 

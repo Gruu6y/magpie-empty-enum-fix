@@ -6,7 +6,26 @@
 回归测试副本：`tests/plain_schema_empty_enum_test.go`
 独立自检：`selfcheck/`（零依赖 Go 模块）、`scripts/verify.sh`、`.github/workflows/ci.yml`
 工作副本：`../magpie-upstream-check`（稀疏克隆，HEAD `a3768cdd1113118998863ed36bd6dd77c8e9e2cc`）
-生产实例：未重启、未热改、未替换、未连接 127.0.0.1:3425；`C:/Users/Administrator/.config/magpie/` 全程未读写；`C:/Users/Administrator/.config/magpie/providers.json` mtime 仍为 `2026-11-04 13:58:12.119764200 +0800`
+生产实例：未重启、未热改、未替换；`C:/Users/Administrator/.config/magpie/` 全程未被本任务写入（该目录由运行中的 magpie 自行更新，`providers.json` mtime 当天从 13:58 变到 21:20，与本任务无关）。21:37 起为做 A/B 复测，经 owner 授权对本机 127.0.0.1:3425 发起过 12 次真实 chat 请求，见下方「端到端 A/B」
+上游：已作为评论发到 https://github.com/yetone/magpie/issues/5235#issuecomment-6632991245 （该 issue 由 eug3 于 2026-11-04 19:41 本地时间提交，根因相同；按「先查同行」未开重复 issue）
+
+## 端到端 A/B（2026-11-04 21:40 本地，真实网关 127.0.0.1:3425）
+
+目的：证明差异只由 enum 空串引起，且直连与 group-2 两条路径都复现。12 次串行请求，`User-Agent: cindy-ab-retest/1.0`，`POST /v1/chat/completions`，`stream:false`、`max_tokens:16`、user 消息「Reply with the single word: ok」，工具名 `routine_save`。两臂唯一差别是 `modelOverride.effort` 的 schema：
+
+- A 臂：`{"type":"string","enum":["","minimal","low","medium","high","xhigh","max","ultra"]}`
+- B 臂：`{"type":"string"}`（即补丁后 `plainSchema` 的实际输出形态）
+
+| 臂 | antigravity/gemini-3.8-flash | group/group-2 |
+|---|---|---|
+| A（含空串） | 400 ×3 | 400 ×3 |
+| B（无 enum） | 200 ×3 | 200 ×3 |
+
+所有 400 均为 `Antigravity: * GenerateContentRequest.tools[0].function_declarations[0].parameters.properties[modelOverride].properties[effort].enum[0]: cannot be empty`；所有 200 的 `choices[0].message.content` 均为 `ok`。A 臂耗时 908–2477ms，B 臂 2509–6045ms。
+
+补丁侧代码输出实证（不写生产的验证方式）：临时测试 `TestABProbePrintPatchedSchema` 直接调用补丁后的 `plainSchema`，对同一工具 schema 输出 `{"properties":{"modelOverride":{"properties":{"agentKind":{"type":"string"},"effort":{"type":"string"}}},"task":{"type":"string"}},"required":["task"],"type":"object"}` —— `effort` 的 `enum` 整个被丢弃、`additionalProperties` 被剥掉。临时测试文件跑完即删。
+
+曾编译打过补丁的二进制（`go build -tags nogui`，91196928B）并尝试在隔离 portable 目录、13425 端口起第二实例做完整端到端；但其启动过程仍执行了 magpie 的 agent 接线逻辑，写入了 `C:\Users\Administrator\.dsh\profiles\{desktop,probe}\cordis.patch.yml`（内容核对后仍为 3425 / `group/chief`，未指向隔离端口）。因 owner 要求不动生产，该实例已停止，补丁二进制的验证改用上面的代码路径实证。
 
 ## 补丁内容
 

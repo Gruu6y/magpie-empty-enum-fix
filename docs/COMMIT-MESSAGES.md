@@ -1,7 +1,7 @@
 # Commit messages
 
 This repository uses [Conventional Commits](https://www.conventionalcommits.org/)
-subjects and a body that answers **why**, not just **what**. All five commits
+subjects and a body that answers **why**, not just **what**. All six commits
 are real commits in this repository; run `git log --format=fuller` to see them.
 
 The patch's own commit message (the one a maintainer would land in magpie) is
@@ -123,6 +123,31 @@ It records the credential lesson too: the local GCM token has only public_repo
 and cannot write .github/workflows/* (git push refuses it, REST returns 404),
 while the cindy-github plugin's backup token has the workflow scope and built
 the identical trees and commits.
+```
+
+## 6. `docs: link the upstream issue and record the live A/B`
+
+```
+docs: link the upstream issue and record the live A/B
+
+The same root cause was filed independently as yetone/magpie#5235
+(dsh + Portainer MCP, macOS), so the report was posted as a comment on
+that issue instead of opening a duplicate. Point the READMEs and the
+report header at it.
+
+Add the live end-to-end A/B to the verification record: twelve requests
+against the real gateway, six per arm, differing only in whether the
+tool's effort enum contains an empty string. The empty-enum arm fails
+with Google's 400 on both the direct antigravity route and the
+group/group-2 route; the arm without the enum keyword answers 200 every
+time. Record the patched plainSchema output as well, and note why the
+patched-binary leg was verified in code rather than on a second live
+instance.
+
+Also correct two statements that the A/B made stale: this task did
+contact 127.0.0.1:3425 (with the owner's approval), and the production
+providers.json mtime changes on its own because the running magpie
+rewrites it, so a frozen mtime was never evidence of anything.
 ```
 
 ---

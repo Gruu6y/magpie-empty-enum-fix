@@ -89,5 +89,7 @@ Only maintainers can open them.」因此这里**没有 PR**，只提供描述 + 
 报告者。
 
 已公开发布在 https://github.com/Gruu6y/magpie-empty-enum-fix （public / MIT），
-`main` = `38ec986`，GitHub Actions 的 `selfcheck` 每次 push 自动跑。自有材料
+`main` = `38ec986`，GitHub Actions 的 `selfcheck` 每次 push 自动跑。
+上游已作为评论发到 [yetone/magpie#5235](https://github.com/yetone/magpie/issues/5235#issuecomment-6632991245)
+（该 issue 根因相同，故未开重复 issue）。自有材料
 MIT（LICENSE），补丁改的是 magpie 自己的 MIT 代码、此处只分发 diff，详见 `NOTICE`。
