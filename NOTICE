@@ -1,0 +1,60 @@
+magpie-empty-enum-fix
+=====================
+
+This repository contains a patch, a regression test, an independent
+self-check module and documentation for magpie:
+
+    https://github.com/yetone/magpie
+
+magpie is distributed under the MIT License, Copyright (c) 2026 yetone.
+Its LICENSE text is reproduced here for convenience:
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+
+Scope of this repository
+------------------------
+
+* patches/0001-...patch is a git-format-patch mbox against magpie's
+  internal/gateway package. It modifies two lines of magpie's own
+  internal/gateway/codeassist.go and adds one new test file. The modified
+  lines remain magpie's code, governed by magpie's MIT license. This
+  repository is NOT a fork of magpie and does not redistribute magpie's
+  source tree; only the unified diff is included.
+
+* tests/plain_schema_empty_enum_test.go is a copy of the new test file
+  included in the patch. It is offered under the MIT License in LICENSE.
+  It is written against magpie's internal/gateway package and is only
+  buildable inside a magpie checkout.
+
+* selfcheck/ is an original, dependency-free Go module that models the
+  relevant enum/const handling in isolation. It contains no magpie source
+  code. It is offered under the MIT License in LICENSE.
+
+* docs/ and README files are original text offered under the MIT License
+  in LICENSE.
+
+magpie's README.md states: "This repository doesn't take pull requests.
+Only maintainers can open them. If you'd like a fix or a feature, describe
+it on Discord and we'll build it." This repository is a description plus a
+patch, not a pull request. Per magpie's docs/contributors.md, anyone using
+the root cause, error text, or test fixture from this report should credit
+the reporter in the commit.
+
+Upstream references quoted in docs/ (error strings, code excerpts, the
+README and contributors.md wording) belong to their respective authors.

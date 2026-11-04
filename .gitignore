@@ -1,0 +1,14 @@
+# Go build/test artifacts
+*.test
+*.out
+*.exe
+coverage.out
+
+# Scratch trees and local notes
+.scratch/
+tmp/
+*.local.md
+
+# Editor / OS
+.DS_Store
+Thumbs.db
